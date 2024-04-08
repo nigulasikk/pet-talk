@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PetTalk</title>
+    <style>
+        body{
+            background-color: #efefef;
+        }
+        .imageContainer{
+            box-shadow: 0 10px 16px rgba(0,0,0,.1);
+            border-radius: 16px;
+            overflow: hidden;
+            width: 80%;
+           margin: 40px auto 20px auto;
+
+        }
+        .pet {
+            display: block;
+            width: 100%;
+        }
+        .info{
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+            background-color: white;
+        }
+        .start, .end{
+            font-size: 40px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="imageContainer">
+        <form action="/upload_base64_image" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="file" class="form-label">选择文件</label>
+                <input type="file" class="form-control" id="file" name="image">
+            </div>
+            <button type="submit" class="btn btn-primary">上传</button>
+        </form>
+        <img src="./pipi.jpg" class="pet"/>
+        <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
+    </div> 
+    <script>
+        const form = document.querySelector('form');
+        const fileInput = document.querySelector('#file');
+
+        form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // 获取文件输入元素，并选择第一个文件（假设是图片）
+    const file = fileInput.files[0];
+    if (!file) {
+        console.error('No file selected.');
+        return;
+    }
+
+    // 读取文件为Base64字符串
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Image = e.target.result; // 读取文件内容完成后，得到Base64编码的图片数据
+
+        // 创建FormData对象并添加Base64图片数据
+        const formData = new FormData();
+        formData.append('image', base64Image);
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/upload_base64_image', {
+                method: 'POST',
+                body: formData,
+            });
+
+            // 由于后端不再需要处理文件，可以移除'Content-Type': 'multipart/form-data'头部
+            // 如果后端需要处理其他表单数据，可以保留该头部
+
+            const data = await response.json();
+            const jsonString = data?.data;
+            console.log('jsonString:',jsonString);
+            // 去除转义字符，将 \\n 替换为 \n
+            const unescapedJsonString = jsonString.replace(/\\n/g, '');
+            console.log('unescapedJsonString:', unescapedJsonString);
+            // 解析 JSON
+            const jsonObject = JSON.parse(unescapedJsonString);
+
+            // 提取数组
+            const resultArray = jsonObject.result;
+            console.log(resultArray);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    reader.readAsDataURL(file); // 读取文件内容，完成后将文件内容转换为Base64
+});
+    </script>
+   
+
+</body>
+</html>
