@@ -50,6 +50,31 @@
             font-size: 40px;
             font-weight: 800;
         }
+        .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+  }
+  .loading-spinner {
+    border: 5px solid rgba(0, 0, 0, 0.2);
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
     </style>
 </head>
 
@@ -64,23 +89,35 @@
                 <input style="display: none;" type="file" id="file" name="image"
                     class="w-full h-[100%] border border-gray-300 rounded-lg mt-4">
                 <button type="submit"
-                    class="bg-gray-800 text-white text-md py-4 px-6 rounded hover:bg-gray-700 mt-8">开始分析</button>
+                    class="bg-gray-800 text-white text-md py-2 px-4 rounded hover:bg-gray-700 mt-4">开始分析</button>
             </div>
         </form>
     </div>
-    <div class="bg-white mt-16">
-        <h2 class="font-bold  pl-14 pt-8">运行结果</h2>
-        <div class="flex flex-wrap justify-start items-center" id="result">
+    <div class="bg-white mt-8">
+        <h2 class="font-bold  pl-14 pt-8">它可能想说</h2>
+        <div class="flex flex-wrap justify-start items-center pb-16" id="result">
         </div>
+        
     </div>
-
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+      </div>
 
     <script>
+function startLoading() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function endingLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
         const form = document.querySelector('form');
         const fileInput = document.querySelector('#file');
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
+            startLoading(); // 显示加载指示器
 
             // 获取文件输入元素，并选择第一个文件（假设是图片）
             const file = fileInput.files[0];
@@ -155,7 +192,7 @@
                         // result 里插入图片
                         appendResultsToContainer(resultArray)
                     }
-                    console.log(resultArray);
+                    endingLoading(); // 隐藏加载指示器
                 } catch (error) {
                     console.error(error);
                 }
