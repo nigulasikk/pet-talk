@@ -21,7 +21,7 @@
             font-family: PPFont, Helvetica, serif;
             font-variant-ligatures: common-ligatures;
             font-variation-settings: "cuts" 100, "move" 100;
-            font-size: 42px;
+            font-size: 62px;
         }
 
         .imageContainer {
@@ -83,9 +83,12 @@
     <p class="text-xl text-center text-gray-600 my-2">让您更好地理解宠物内心的世界</p>
     <div class="flex justify-center items-center mt-8">
         <form class="w-[300px] h-[200px] border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6"
-            action="/upload_base64_image" method="post" enctype="multipart/form-data">
+            action="/analyze_image" method="post" enctype="multipart/form-data">
             <div class="flex flex-col items-center">
-                <label for="file" class="text-gray-700">上传宠物照片：拖放至此处或单击进行上传</label>
+                <label for="file" class="text-gray-600">上传宠物照片：拖放至此处或单击进行上传</label>
+                <div id="previewContainer" class=" p-2 mt-2 hidden flex">
+                   <img id="previewImage" width="100" class="h-auto rounded box-shadow" src="" alt="Preview">
+                </div>
                 <input style="display: none;" type="file" id="file" name="image"
                     class="w-full h-[100%] border border-gray-300 rounded-lg mt-4">
                 <button type="submit"
@@ -114,17 +117,49 @@ function endingLoading() {
 
         const form = document.querySelector('form');
         const fileInput = document.querySelector('#file');
-
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+        const previewImage = document.getElementById('previewImage');
+        const previewContainer = document.getElementById('previewContainer');
+        fileInput.addEventListener('change', async (event) => {
             startLoading(); // 显示加载指示器
-
-            // 获取文件输入元素，并选择第一个文件（假设是图片）
+            const reader = new FileReader();
             const file = fileInput.files[0];
             if (!file) {
                 console.error('No file selected.');
                 return;
             }
+            reader.onload = async function (e) {
+                const base64Image = e.target.result; // 读取文件内容完成后，得到Base64编码的图片数据
+                const formData = new FormData();
+                formData.append('image', base64Image);
+
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/upload_base64_image', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    // 由于后端不再需要处理文件，可以移除'Content-Type': 'multipart/form-data'头部
+                    // 如果后端需要处理其他表单数据，可以保留该头部
+
+                    const data = await response.json();
+                    const ossRes = data?.data;
+                    console.log('ossRes:', ossRes);
+                    previewImage.src = ossRes;
+                    previewContainer.classList.remove('hidden')
+                    
+                    endingLoading(); // 隐藏加载指示器
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+            reader.readAsDataURL(file); // 读取文件内容，完成后将文件内容转换为Base64
+
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            startLoading(); // 显示加载指示器
+
             function appendResultsToContainer(results) {
                 const resultContainer = document.getElementById('result');
 
@@ -140,7 +175,7 @@ function endingLoading() {
 
                     // 创建图片元素
                     const img = document.createElement('img');
-                    img.src = './pipi.jpg';
+                    img.src = previewImage.src;
                     img.className = 'pet';
 
                     // 创建信息div
@@ -160,22 +195,15 @@ function endingLoading() {
                 });
             }
             // 读取文件为Base64字符串
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-                const base64Image = e.target.result; // 读取文件内容完成后，得到Base64编码的图片数据
-
-                // 创建FormData对象并添加Base64图片数据
-                const formData = new FormData();
-                formData.append('image', base64Image);
-
+      
+       
+         
                 try {
-                    const response = await fetch('http://127.0.0.1:5000/upload_base64_image', {
-                        method: 'POST',
-                        body: formData,
+                    const response = await fetch('http://127.0.0.1:5000/analyze_image?image='+  encodeURIComponent(previewImage.src), {
+                        method: 'GET',
+                       
                     });
 
-                    // 由于后端不再需要处理文件，可以移除'Content-Type': 'multipart/form-data'头部
-                    // 如果后端需要处理其他表单数据，可以保留该头部
 
                     const data = await response.json();
                     const jsonString = data?.data;
@@ -186,7 +214,7 @@ function endingLoading() {
                     // 解析 JSON
                     const jsonObject = JSON.parse(unescapedJsonString);
 
-                    // 提取数组 ,样例值： ['睡得好香', '舒服得不想动弹', '享受着午后的慵懒']
+                    // 提取数组 ,样例值： ['我睡得好香，别打扰我', '舒服得不想动弹', '享受着午后的慵懒']
                     const resultArray = jsonObject.result;
                     if (resultArray?.length) {
                         // result 里插入图片
@@ -196,9 +224,9 @@ function endingLoading() {
                 } catch (error) {
                     console.error(error);
                 }
-            };
+       
 
-            reader.readAsDataURL(file); // 读取文件内容，完成后将文件内容转换为Base64
+     
         });
     </script>
 

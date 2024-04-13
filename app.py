@@ -27,37 +27,47 @@ bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', ALIYUN_BUCKET
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/multimodal_conversation', methods=['GET'])
-def multimodal_conversation(image):
+@app.route('/analyze_image', methods=['GET'])
+def analyze_image():
+   # 从查询字符串中获取'image'参数
+    image = request.args.get('image')
+    print('image參數：', image)
+    if image:
+           # 构造messages结构
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"image": image},
+                    {"text": f"{image_prompt}"}
+                ]
+            }
+        ]
 
-    # 构造messages结构
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {"image": image},
-                {"text": f"{image_prompt}"}
-            ]
-        }
-    ]
+        # 调用MultiModalConversation.call
+        imageInfoResponse = dashscope.MultiModalConversation.call(model='qwen-vl-plus', messages=messages)
+        print('imageInfoResponse', imageInfoResponse)
+   
+        if imageInfoResponse.status_code == HTTPStatus.OK:
+            print(f"图片识别结果: {imageInfoResponse}")
+        else:
+            print(imageInfoResponse.code)  # The error code.
+            print(imageInfoResponse.message)  # The error message.
+                 # 检查output.choices是否存在且不为空
+        if not hasattr(imageInfoResponse.output, 'choices') or not imageInfoResponse.output.choices:
+            return jsonify({"error": "Missing choices in the response output"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
-    # 调用MultiModalConversation.call
-    imageInfoResponse = dashscope.MultiModalConversation.call(model='qwen-vl-plus', messages=messages)
-        # 检查output.choices是否存在且不为空
-    if not hasattr(imageInfoResponse.output, 'choices') or not imageInfoResponse.output.choices:
-        return jsonify({"error": "Missing choices in the response output"}), HTTPStatus.INTERNAL_SERVER_ERROR
+        json_string = str(imageInfoResponse.output.choices[0].message.content[0])
 
-    if imageInfoResponse.status_code == HTTPStatus.OK:
-        print(f"图片识别结果: {imageInfoResponse}")
+        json_pattern = r'```json(.*)```'
+        json_content = re.search(json_pattern, json_string).group(1)
+        return jsonify({"code": imageInfoResponse.code, "data": json_content}), imageInfoResponse.status_code
+
     else:
-        print(imageInfoResponse.code)  # The error code.
-        print(imageInfoResponse.message)  # The error message.
-    json_string = str(imageInfoResponse.output.choices[0].message.content[0])
+        # 如果没有提供'image'参数，返回错误响应
+        return jsonify({'status': 'error', 'message': 'Missing image parameter'}), 400
 
-    json_pattern = r'```json(.*)```'
-    json_content = re.search(json_pattern, json_string).group(1)
-    return jsonify({"code": imageInfoResponse.code, "data": json_content}), imageInfoResponse.status_code
-
+ 
 @app.route('/upload_base64_image', methods=['POST'])
 def upload_base64_image():
     image_data = request.form.get('image')
@@ -71,7 +81,8 @@ def upload_base64_image():
     bucket.put_object(object_name, image_bytes)  # 上传二进制数据
     # 初始化所需参数
     presigned_url = bucket.sign_url('GET', object_name, 3600)
-    response = multimodal_conversation(presigned_url)
-    return response
+    return jsonify({"code": 200, "data": presigned_url}), 200
+    # response = analyze_image(presigned_url)
+    # return response
 if __name__ == '__main__':
     app.run(debug=True)
