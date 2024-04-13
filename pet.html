@@ -7,6 +7,20 @@
         body{
             background-color: #efefef;
         }
+      
+        @font-face {
+            font-family: 'PPFont';
+            src: url('https://assets3.oss-cn-hangzhou.aliyuncs.com/PPFont.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-variant-ligatures: common-ligatures;
+        }
+        h1{
+            font-family: PPFont, Helvetica, serif;
+            font-variant-ligatures: common-ligatures;
+            font-variation-settings: "cuts" 100, "move" 100;
+            font-size: 42px;
+        }
         .imageContainer{
             box-shadow: 0 10px 16px rgba(0,0,0,.1);
             border-radius: 16px;
@@ -32,35 +46,38 @@
     </style>
 </head>
 <body>
-    <h1 class="text-4xl font-bold text-center text-blue-600 my-8">PETTALK</h1>
-    <p class="text-xl text-center text-gray-700 my-4">让您更好地理解宠物内心的世界</p>
-    <div class="flex justify-center items-center">
+    <h1 class="font-bold text-center text-black-600 my-4">PET-TALK</h1>
+    <p class="text-xl text-center text-gray-600 my-2">让您更好地理解宠物内心的世界</p>
+    <div class="flex justify-center items-center mt-8">
         <form class="w-[300px] h-[200px] border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6" action="/upload_base64_image" method="post" enctype="multipart/form-data">
             <div class="flex flex-col items-center">
-                <label for="file" class="text-gray-700">拖放文件到这里或点击上传</label>
+                <label for="file" class="text-gray-700">上传宠物照片：拖放至此处或单击进行上传</label>
                 <input style="display: none;" type="file" id="file" name="image" class="w-full h-[100%] border border-gray-300 rounded-lg mt-4">
                 <!-- <button type="submit" class="bg-blue-500 text-white text-sm py-2 px-4 rounded hover:bg-blue-600 mt-4">上传</button> -->
             </div>
         </form>
     </div>
-    <div>运行结果</div>
-    <div class="flex flex-wrap justify-start items-center">
-        <!-- 这些 div 将尝试充满整个容器宽度，但由于一行显示四个，它们会自动调整宽度 -->
-        <div class="w-full md:w-1/3 bg-gray-300 rounded-md m-2 p-4 flex items-center justify-center">
-            <div class="imageContainer">
-                <img src="./pipi.jpg" class="pet"/>
-                <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
-            </div> 
+    <div class="bg-white mt-16">
+        <h2 class="font-bold  pl-8 pt-8">运行结果</h2>
+        <div class="flex flex-wrap justify-start items-center">
+            <!-- 这些 div 将尝试充满整个容器宽度，但由于一行显示四个，它们会自动调整宽度 -->
+            <div class="w-full md:w-1/2 rounded-md flex items-center justify-center">
+                <div class="imageContainer">
+                    <img src="./pipi.jpg" class="pet"/>
+                    <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
+                </div> 
+            </div>
+            <div class="w-full md:w-1/2  rounded-md  flex items-center justify-center">
+                <div class="imageContainer">
+                    <img src="./pipi.jpg" class="pet"/>
+                    <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
+                </div> 
+            </div>
+            
+            <!-- 可以根据需要添加更多项目 -->
         </div>
-        <div class="w-full md:w-1/3 bg-gray-300 rounded-md m-2 p-4 flex items-center justify-center">
-            <div class="imageContainer">
-                <img src="./pipi.jpg" class="pet"/>
-                <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
-            </div> 
-        </div>
-      
-        <!-- 可以根据需要添加更多项目 -->
     </div>
+    
     
     <script>
         const form = document.querySelector('form');
