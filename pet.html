@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>PetTalk</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        body{
+        body {
             background-color: #efefef;
         }
-      
+
         @font-face {
             font-family: 'PPFont';
             src: url('https://assets3.oss-cn-hangzhou.aliyuncs.com/PPFont.woff2') format('woff2');
@@ -15,123 +16,156 @@
             font-style: normal;
             font-variant-ligatures: common-ligatures;
         }
-        h1{
+
+        h1 {
             font-family: PPFont, Helvetica, serif;
             font-variant-ligatures: common-ligatures;
             font-variation-settings: "cuts" 100, "move" 100;
             font-size: 42px;
         }
-        .imageContainer{
-            box-shadow: 0 10px 16px rgba(0,0,0,.1);
+
+        .imageContainer {
+            box-shadow: 0 10px 16px rgba(0, 0, 0, .1);
             border-radius: 16px;
             overflow: hidden;
             width: 80%;
-           margin: 40px auto 20px auto;
+            margin: 40px auto 20px auto;
 
         }
+
         .pet {
             display: block;
             width: 100%;
         }
-        .info{
+
+        .info {
             text-align: center;
             width: 100%;
             padding: 20px;
             background-color: white;
         }
-        .start, .end{
+
+        .start,
+        .end {
             font-size: 40px;
             font-weight: 800;
         }
     </style>
 </head>
+
 <body>
     <h1 class="font-bold text-center text-black-600 my-4">PET-TALK</h1>
     <p class="text-xl text-center text-gray-600 my-2">让您更好地理解宠物内心的世界</p>
     <div class="flex justify-center items-center mt-8">
-        <form class="w-[300px] h-[200px] border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6" action="/upload_base64_image" method="post" enctype="multipart/form-data">
+        <form class="w-[300px] h-[200px] border-2 border-dashed border-gray-300 bg-gray-100 rounded-lg p-6"
+            action="/upload_base64_image" method="post" enctype="multipart/form-data">
             <div class="flex flex-col items-center">
                 <label for="file" class="text-gray-700">上传宠物照片：拖放至此处或单击进行上传</label>
-                <input style="display: none;" type="file" id="file" name="image" class="w-full h-[100%] border border-gray-300 rounded-lg mt-4">
-                <!-- <button type="submit" class="bg-blue-500 text-white text-sm py-2 px-4 rounded hover:bg-blue-600 mt-4">上传</button> -->
+                <input style="display: none;" type="file" id="file" name="image"
+                    class="w-full h-[100%] border border-gray-300 rounded-lg mt-4">
+                <button type="submit"
+                    class="bg-gray-800 text-white text-md py-4 px-6 rounded hover:bg-gray-700 mt-8">开始分析</button>
             </div>
         </form>
     </div>
     <div class="bg-white mt-16">
-        <h2 class="font-bold  pl-8 pt-8">运行结果</h2>
-        <div class="flex flex-wrap justify-start items-center">
-            <!-- 这些 div 将尝试充满整个容器宽度，但由于一行显示四个，它们会自动调整宽度 -->
-            <div class="w-full md:w-1/2 rounded-md flex items-center justify-center">
-                <div class="imageContainer">
-                    <img src="./pipi.jpg" class="pet"/>
-                    <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
-                </div> 
-            </div>
-            <div class="w-full md:w-1/2  rounded-md  flex items-center justify-center">
-                <div class="imageContainer">
-                    <img src="./pipi.jpg" class="pet"/>
-                    <div class="info"><span class="start">“</span> 没有什么比午后小憩更美好的事情了 <span class="end">”</span></div>
-                </div> 
-            </div>
-            
-            <!-- 可以根据需要添加更多项目 -->
+        <h2 class="font-bold  pl-14 pt-8">运行结果</h2>
+        <div class="flex flex-wrap justify-start items-center" id="result">
         </div>
     </div>
-    
-    
+
+
     <script>
         const form = document.querySelector('form');
         const fileInput = document.querySelector('#file');
 
         form.addEventListener('submit', async (event) => {
-    event.preventDefault();
+            event.preventDefault();
 
-    // 获取文件输入元素，并选择第一个文件（假设是图片）
-    const file = fileInput.files[0];
-    if (!file) {
-        console.error('No file selected.');
-        return;
-    }
+            // 获取文件输入元素，并选择第一个文件（假设是图片）
+            const file = fileInput.files[0];
+            if (!file) {
+                console.error('No file selected.');
+                return;
+            }
+            function appendResultsToContainer(results) {
+                const resultContainer = document.getElementById('result');
 
-    // 读取文件为Base64字符串
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const base64Image = e.target.result; // 读取文件内容完成后，得到Base64编码的图片数据
+                // 遍历结果数组，为每个结果创建新的DOM结构
+                results.forEach((resultText) => {
+                    // 创建外部div元素
+                    const outerDiv = document.createElement('div');
+                    outerDiv.className = 'w-full md:w-1/2 rounded-md flex items-center justify-center';
 
-        // 创建FormData对象并添加Base64图片数据
-        const formData = new FormData();
-        formData.append('image', base64Image);
+                    // 创建imageContainer div
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'imageContainer';
 
-        try {
-            const response = await fetch('http://127.0.0.1:5000/upload_base64_image', {
-                method: 'POST',
-                body: formData,
-            });
+                    // 创建图片元素
+                    const img = document.createElement('img');
+                    img.src = './pipi.jpg';
+                    img.className = 'pet';
 
-            // 由于后端不再需要处理文件，可以移除'Content-Type': 'multipart/form-data'头部
-            // 如果后端需要处理其他表单数据，可以保留该头部
+                    // 创建信息div
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'info';
+                     infoDiv.innerHTML = `<span class="start">“</span> ${resultText} <span class="end">”</span>`;
 
-            const data = await response.json();
-            const jsonString = data?.data;
-            console.log('jsonString:',jsonString);
-            // 去除转义字符，将 \\n 替换为 \n
-            const unescapedJsonString = jsonString.replace(/\\n/g, '');
-            console.log('unescapedJsonString:', unescapedJsonString);
-            // 解析 JSON
-            const jsonObject = JSON.parse(unescapedJsonString);
+                    // 将图片和信息div添加到imageContainer
+                    imageContainer.appendChild(img);
+                    imageContainer.appendChild(infoDiv);
 
-            // 提取数组
-            const resultArray = jsonObject.result;
-            console.log(resultArray);
-        } catch (error) {
-            console.error(error);
-        }
-    };
+                    // 将imageContainer添加到外部div
+                    outerDiv.appendChild(imageContainer);
 
-    reader.readAsDataURL(file); // 读取文件内容，完成后将文件内容转换为Base64
-});
+                    // 将外部div添加到结果容器
+                    resultContainer.appendChild(outerDiv);
+                });
+            }
+            // 读取文件为Base64字符串
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const base64Image = e.target.result; // 读取文件内容完成后，得到Base64编码的图片数据
+
+                // 创建FormData对象并添加Base64图片数据
+                const formData = new FormData();
+                formData.append('image', base64Image);
+
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/upload_base64_image', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    // 由于后端不再需要处理文件，可以移除'Content-Type': 'multipart/form-data'头部
+                    // 如果后端需要处理其他表单数据，可以保留该头部
+
+                    const data = await response.json();
+                    const jsonString = data?.data;
+                    console.log('jsonString:', jsonString);
+                    // 去除转义字符，将 \\n 替换为 \n
+                    const unescapedJsonString = jsonString.replace(/\\n/g, '');
+                    console.log('unescapedJsonString:', unescapedJsonString);
+                    // 解析 JSON
+                    const jsonObject = JSON.parse(unescapedJsonString);
+
+                    // 提取数组 ,样例值： ['睡得好香', '舒服得不想动弹', '享受着午后的慵懒']
+                    const resultArray = jsonObject.result;
+                    if (resultArray?.length) {
+                        // result 里插入图片
+                        appendResultsToContainer(resultArray)
+                    }
+                    console.log(resultArray);
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            reader.readAsDataURL(file); // 读取文件内容，完成后将文件内容转换为Base64
+        });
     </script>
-   
+
 
 </body>
+
 </html>
