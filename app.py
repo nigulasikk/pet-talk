@@ -10,6 +10,7 @@ import os
 from oss2.credentials import EnvironmentVariableCredentialsProvider
 from datetime import datetime, timedelta
 import re
+from flask import send_from_directory
 import json
 
 ALIYUN_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID")
@@ -26,6 +27,12 @@ bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', ALIYUN_BUCKET
 
 app = Flask(__name__)
 CORS(app)
+
+@app.route('/')
+def index():
+    # 返回HTML页面
+    return send_from_directory('', './pet.html')
+
 
 @app.route('/analyze_image', methods=['GET'])
 def analyze_image():
